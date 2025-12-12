@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    implementation("commons-net:commons-net:3.3")
+    implementation("commons-net:commons-net:3.12.0")
 }
 
 tasks.withType<KotlinCompile> {

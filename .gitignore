@@ -89,6 +89,7 @@ coverage/
 
 # Application specific
 libs/
+!libs/aggregate-api-libs.jar
 *.class
 
 # IDE specific files

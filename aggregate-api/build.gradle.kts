@@ -53,6 +53,8 @@ tasks.named("assemble") {
 }
 
 tasks.withType<Jar> {
+    dependsOn(":widget-api:compileJava")
+    dependsOn(":widget-api:processResources")
     from(jarImplementation.asFileTree.files.map { zipTree(it) })
     from("../widget-api/build/classes/java/main")
     from("../widget-api/build/classes/java/test") {

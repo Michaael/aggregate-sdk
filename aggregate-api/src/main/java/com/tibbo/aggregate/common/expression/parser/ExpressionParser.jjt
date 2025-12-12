@@ -1,0 +1,445 @@
+
+options {
+  STATIC=false;
+  MULTI=true;
+  VISITOR=true;
+  NODE_DEFAULT_VOID=true;
+  UNICODE_INPUT=true;
+  TRACK_TOKENS=true;
+  VISITOR_DATA_TYPE="com.tibbo.aggregate.common.expression.EvaluationEnvironment";
+  VISITOR_RETURN_TYPE="com.tibbo.aggregate.common.expression.AttributedObject";
+  NODE_CLASS="com.tibbo.aggregate.common.expression.parser.ExpressionNode";
+}
+
+PARSER_BEGIN(ExpressionParser)
+
+package com.tibbo.aggregate.common.expression.parser;
+
+public class ExpressionParser {
+}
+
+PARSER_END(ExpressionParser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| <"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">
+}
+
+MORE :
+{
+  "//" : IN_SINGLE_LINE_COMMENT
+|
+  "/*" : IN_MULTI_LINE_COMMENT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+SPECIAL_TOKEN : { <SINGLE_LINE_COMMENT:  (~["\r","\n","\u001a"])* ("\r"|"\n"|"\r\n")? > : DEFAULT }
+
+<IN_MULTI_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <MULTI_LINE_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_SINGLE_LINE_COMMENT,IN_MULTI_LINE_COMMENT>
+MORE :
+{
+  < ~[] >
+}
+
+
+TOKEN [IGNORE_CASE] :
+{
+  < OR: "||" >
+|
+  < AND: "&&" >
+|
+  < NOT: "!" >
+|
+  < BITWISE_OR: "|" >
+|
+  < BITWISE_XOR: "^" >
+|
+  < BITWISE_AND: "&" >
+|
+  < BITWISE_NOT: "~" >
+|
+  < TRUE: "TRUE" >
+|
+  < FALSE: "FALSE" >
+|
+  < NULL: "NULL" >
+}
+
+TOKEN : /* LITERALS */
+{
+  < INTEGER_LITERAL:
+        <DECIMAL_LITERAL>
+      | <HEX_LITERAL>
+      | <OCTAL_LITERAL>
+      | <BINARY_LITERAL>
+  >
+|
+  < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+|
+  < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+|
+  < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+|
+  < #BINARY_LITERAL: "0" ["b","B"] (["0"-"1"])+ >
+|
+  < FLOATING_POINT_LITERAL:
+      (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["f","F","d","D"])?
+      | "." (["0"-"9"])+ (<EXPONENT>)? (["f","F","d","D"])?
+      | (["0"-"9"])+ <EXPONENT> (["f","F","d","D"])?
+      | (["0"-"9"])+ (<EXPONENT>)? ["f","F","d","D"]
+  >
+|
+  < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+|
+  < STRING_LITERAL:
+      (
+      "\""
+      (   
+        (~["\"","\\","\n","\r","\t","\f","\b"])
+        | ("\\" ( ["\\","'","\"","n","r","t","f","b"]) )
+        | ("\\" "u" (["0"-"9","a"-"f","A"-"F"]){4} )
+      )*
+      "\""
+      ) | (
+      "'"
+      (
+        (~["'","\\","\n","\r","\t","\f","\b"])
+        | ("\\" ( ["\\","'","\"","n","r","t","f","b"]) )
+        | ("\\" "u" (["0"-"9","a"-"f","A"-"F"]){4} )
+      )*
+      "'"
+      )
+  >
+}
+
+TOKEN : /* OPERATORS */
+{
+  < PLUS: "+">
+|
+  < MINUS: "-">
+|
+  < MUL: "*">
+|
+  < DIV: "/">
+|
+  < MOD: "%">
+|
+  < QUESTION: "?">
+|
+  < COLON: ":">
+|
+  < COMMA: ",">
+|
+  < EQ: "==">
+|
+  < NE: "!=">
+|
+  < MATCH: "~=">
+|
+  < LT: "<">
+|
+  < GT: ">">
+|
+  < LTE: "<=">
+|
+  < GTE: ">=">
+|
+  < LBRAKET: "(">
+|
+  < RBRAKET: ")">
+|
+  < LBRACE: "{">
+|
+  < RBRACE: "}" >
+|
+  < RIGHT_SHIFT: ">>" >
+|
+  < URIGHT_SHIFT: ">>>" >
+|
+  < LEFT_SHIFT: "<<" >
+}
+
+TOKEN : /* IDENTIFIERS */
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+  < URICHAR: <LETTER> | <DIGIT> | ["/","\\","%","?",":",";","@","=","#","&","+","$",",","-",".","!","~","*","'","(",")","[","]","}"]>
+|
+  < #LETTER: ["_","a"-"z","A"-"Z"] >
+|
+  < #DIGIT: ["0"-"9"] >
+}
+
+JAVACODE
+    String skip_to_matching_brace()
+    {
+      String res = "";
+      Token tok;
+      int nesting = 1;
+      while (true) {
+        tok = getToken(1);
+        if (tok.kind == EOF) break;
+        if (tok.kind == LBRACE) nesting++;
+        if (tok.kind == RBRACE) {
+          nesting--;
+          if (nesting == 0) break;
+        }
+        if (tok.kind == STRING_LITERAL) {
+          res += tok.image.replace("\\\\", "\\");
+        }
+        else
+        {
+          res += tok.image;
+        }
+        tok = getNextToken();
+      }
+
+      return res;
+    }
+
+ASTStart Start() #Start : {}
+{
+  ( Expression() )? <EOF>
+  { return jjtThis; }
+}
+
+void Expression() : {}
+{
+  ConditionalExpression()
+}
+
+void ConditionalExpression() : {}
+{
+  LogicalOrExpression() ( <QUESTION> LogicalOrExpression() <COLON> ConditionalExpression() #ConditionalNode(3) )?
+}
+
+void LogicalOrExpression() : {}
+{
+  LogicalAndExpression() ( <OR> LogicalAndExpression() #LogicalOrNode(2) )*
+}
+
+void LogicalAndExpression() : {}
+{
+  BitwiseOrExpression() ( <AND> BitwiseOrExpression()  #LogicalAndNode(2) )*
+}
+
+void BitwiseOrExpression() : {}
+{
+  BitwiseXorExpression() ( <BITWISE_OR> BitwiseXorExpression() #BitwiseOrNode(2) )*
+}
+
+void BitwiseXorExpression() : {}
+{
+  BitwiseAndExpression() ( <BITWISE_XOR> BitwiseAndExpression() #BitwiseXorNode(2) )*
+}
+
+void BitwiseAndExpression() : {}
+{
+  EqualityExpression() ( <BITWISE_AND> EqualityExpression() #BitwiseAndNode(2) )*
+}
+
+void EqualityExpression() #void :
+{}
+{
+  RelationalExpression()
+  (
+     <EQ> RelationalExpression() #EQNode(2)
+   |
+     <NE> RelationalExpression() #NENode(2)
+   |
+     <MATCH> RelationalExpression() #RegexMatchNode(2)
+  )*
+}
+void RelationalExpression() #void :
+{}
+{
+  ShiftExpression()
+  (
+    <LT> ShiftExpression() #LTNode(2)
+   |
+    <GT> ShiftExpression() #GTNode(2)
+   |
+    <LTE> ShiftExpression() #LENode(2)
+   |
+    <GTE> ShiftExpression() #GENode(2)
+  )*
+}
+
+void ShiftExpression() #void :
+{}
+{
+  AdditiveExpression()
+  (
+    <RIGHT_SHIFT> AdditiveExpression() #RightShiftNode(2)
+   |
+    <URIGHT_SHIFT> AdditiveExpression() #UnsignedRightShiftNode(2)
+   |
+    <LEFT_SHIFT> AdditiveExpression() #LeftShiftNode(2)
+  )*
+}
+
+void AdditiveExpression() #void :
+{}
+{
+  MultiplicativeExpression()
+  (
+    <PLUS> MultiplicativeExpression() #AddNode(2)
+   |
+    <MINUS> MultiplicativeExpression() #SubtractNode(2)
+  )*
+}
+
+void MultiplicativeExpression() #void :
+{}
+{
+  UnaryExpression()
+  (
+    <MUL> UnaryExpression() #MulNode(2)
+   |
+    <DIV> UnaryExpression() #DivNode(2)
+   |
+    <MOD> UnaryExpression() #ModNode(2)
+  )*
+}
+
+void UnaryExpression() : {}
+{
+  <MINUS> LogicalNotExpression() #UnaryNode(1)
+  |
+  LogicalNotExpression()
+}
+
+void LogicalNotExpression() : {}
+{
+  <NOT> LogicalNotExpression() #LogicalNotNode(1)
+  |
+  BitwiseNotExpression()
+}
+
+void BitwiseNotExpression() : {}
+{
+  <BITWISE_NOT> BitwiseNotExpression() #BitwiseNotNode(1)
+  |
+  PrimaryExpression()
+}
+
+void PrimaryExpression() #void :
+{
+   String name;
+}
+{
+  <LBRACE> ValueReference() <RBRACE>
+|
+  Literal()
+|
+  Function()
+|
+  <LBRAKET> Expression() <RBRAKET>
+}
+
+
+void Function() #FunctionNode :
+{
+   Token t;
+}
+{
+  t=<IDENTIFIER> Arguments()
+    {
+       jjtThis.name = t.image;
+    }
+
+}
+
+void Arguments() #void :
+{}
+{
+  <LBRAKET> [ ArgumentList() ] <RBRAKET>
+}
+
+void ArgumentList() #void :
+{}
+{
+  Expression() ( <COMMA> Expression() )*
+}
+
+void ValueReference() #ValueReferenceNode :
+{
+   Token t;
+}
+{
+  jjtThis.uriImage = skip_to_matching_brace()
+}
+
+void Literal() #void :
+{
+   Token t;
+}
+{
+ (
+  t=<INTEGER_LITERAL>
+    {
+       if (t.image.startsWith("0x") || t.image.startsWith("0X"))
+       {
+         jjtThis.val = Long.parseLong(t.image.substring(2, t.image.length()), 16);
+       }
+       else if (t.image.startsWith("0b") || t.image.startsWith("0B"))
+       {
+         jjtThis.val = Long.parseLong(t.image.substring(2, t.image.length()), 2);
+       }
+       else if (t.image.startsWith("0") && t.image.length() > 1)
+       {
+         jjtThis.val = Long.parseLong(t.image.substring(1, t.image.length()), 8);
+       }
+       else
+       {
+         jjtThis.val = Long.parseLong(t.image);
+       }
+    }
+ ) #LongConstNode
+|
+ (
+  t=<FLOATING_POINT_LITERAL>
+    {
+       if (t.image.endsWith("f"))
+       {
+         jjtThis.floatVal = Float.parseFloat(t.image);
+       }
+       else
+       {
+         jjtThis.doubleVal = Double.parseDouble(t.image);
+       }
+    }
+ ) #FloatConstNode
+|
+ (
+  t=<STRING_LITERAL>
+    {
+       jjtThis.val = t.image.substring(1, t.image.length() - 1);
+       
+       jjtThis.val = org.apache.commons.lang3.StringEscapeUtils.unescapeJava(jjtThis.val);
+    }
+ ) #StringConstNode
+|
+  BooleanLiteral()
+|
+  <NULL> #NullNode
+}
+
+void BooleanLiteral() #void :
+{}
+{
+  <TRUE> #TrueNode
+|
+  <FALSE> #FalseNode
+}
+

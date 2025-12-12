@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration monitorInterval="10">
+	<Appenders>
+		<Console name="console" target="SYSTEM_OUT">
+			<ThresholdFilter level="debug"/>
+			<PatternLayout pattern="%d{HH:mm:ss,SSS} %-5p %-15c %m     -     -     -     -     -     -     -     -     -     -     [%t] %C.%M (%F:%L)%n%throwable{full}"/>
+		</Console>
+		<File name="file" fileName="logs/server.log" append="true">
+			<ThresholdFilter level="debug"/>
+			<PatternLayout pattern="%d{dd.MM.yyyy HH:mm:ss,SSS} %-5p %-25c %m     -     -     -     -     -     -     -     -     -     -     [%t] %C.%M (%F:%L)%n%throwable{full}"/>
+		</File>
+	</Appenders>
+
+	<Loggers>
+		<Logger name="ag" level="info" additivity="false">
+			<AppenderRef ref="console"/>
+		</Logger>
+
+
+		<Root level="warn">
+			<AppenderRef ref="console"/>
+			<AppenderRef ref="file"/>
+		</Root>
+	</Loggers>
+</Configuration>

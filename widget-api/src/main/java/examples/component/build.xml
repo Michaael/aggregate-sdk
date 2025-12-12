@@ -1,0 +1,9 @@
+<project name="Custom Progress Bar" default="build">
+	<target name="build">
+		<jar destfile="./custom-progress-bar.jar">
+			<fileset dir="../../../bin" includes="examples/component/**/*.class" />
+			<fileset dir="../../../bin" includes="examples/component/**/*.png" />
+			<fileset file="plugin.xml" />
+		</jar>
+	</target>
+</project>

@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<!DOCTYPE plugin PUBLIC "-//JPF//Java Plug-in Manifest 0.4" "http://jpf.sourceforge.net/plugin_0_4.dtd">
+<plugin id="com.tibbo.linkserver.plugin.context.demo-web-app" version="0.0.1" class="examples.webapp.DemoWebAppContextPlugin">
+  <doc>
+    <doc-text>Demo Web Application</doc-text>
+  </doc>
+  <requires>
+    <import plugin-id="com.tibbo.aggregate.common.plugin.extensions" match="compatible" exported="false" optional="false" />
+    <import plugin-id="com.tibbo.linkserver.plugin.context.webserver" match="compatible" exported="false" optional="false" />
+  </requires>
+  <runtime>
+    <library id="tibbo" path="/" type="code">
+      <export prefix="*" />
+    </library>
+  </runtime>
+  <extension plugin-id="com.tibbo.aggregate.common.plugin.extensions" point-id="context" id="demo-web-app" />
+</plugin>

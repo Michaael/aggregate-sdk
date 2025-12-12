@@ -1,0 +1,100 @@
+package com.tibbo.aggregate.common.context;
+
+public class Contexts
+{
+  public final static String CURRENT = ContextUtils.CONTEXT_NAME_SEPARATOR;
+  
+  public final static String CTX_ADMINISTRATION = "administration";
+  public final static String CTX_ALERTS = "alerts";
+  public final static String CTX_AUTORUN = "autorun";
+  public final static String CTX_CONFIG = "config";
+  public final static String CTX_COMMON_DATA = "common";
+  public final static String CTX_DASHBOARDS = "dashboards";
+  public final static String CTX_DEBUG = "debug";
+  public static final String CTX_DEFAULT = ".";
+  public final static String CTX_DEVGROUPS = "devgroups";
+  public final static String CTX_DEVICES = "devices";
+  public final static String CTX_DEVICESERVERS = "deviceservers";
+  public final static String CTX_DSGROUPS = "dsgroups";
+  public final static String CTX_EVENTS = "events";
+  public final static String CTX_FILTERS = "filters";
+  public static final String CTX_CORRELATORS = "correlators";
+  public final static String CTX_EXTERNAL_DEVICE_SERVERS = "external_device_servers";
+  public final static String CTX_FAVOURITES = "favourites";
+  public final static String CTX_GROUPS = "groups";
+  public final static String CTX_GEOFENCES = "geofences";
+  public final static String CTX_JOBS = "jobs";
+  public final static String CTX_PLUGINS_CONFIG = "plugins";
+  public final static String CTX_PLUGINS_USER_CONFIG = "plugins";
+  public final static String CTX_PLUGIN_CONFIG = "plugin_config";
+  public final static String CTX_COMPLIANCE_POLICIES = "compliancePolicies";
+  public final static String CTX_QUERIES = "queries";
+  public final static String CTX_REPORTS = "reports";
+  public final static String CTX_ROLES = "roles";
+  public final static String CTX_ROOT = "";
+  public final static String CTX_SCHEDULER = "scheduler";
+  public final static String CTX_SCRIPTS = "scripts";
+  public final static String CTX_SEGMENTS = "segments";
+  public final static String CTX_TRACKERS = "trackers";
+  public final static String CTX_USERS_GROUPS = "users_groups";
+  public final static String CTX_USERS = "users";
+  public final static String CTX_UTILITIES = "utilities";
+  
+  public final static String CTX_UI_COMPONENTS = "uiComponents";
+  public final static String CTX_WIDGETS = "widgets";
+  public final static String CTX_PROCESS_CONTROL = "processControl";
+  public final static String CTX_MACHINE_LEARNING = "machineLearning";
+  public final static String CTX_MODELS = "models";
+  public final static String CTX_APPLICATIONS = "applications";
+  public final static String CTX_CLASSES = "classes";
+  public final static String CTX_WORKFLOWS = "workflows";
+  
+  public static final String CTX_MOUNT = "mount";
+  public final static String CTX_DISCOVERY = "discovery";
+  public static final String CTX_NETMANAGEMENT = "netmanagement";
+  
+  public final static String TYPE_ALERTS = "alerts";
+  public final static String TYPE_ALERT = "alert";
+  public final static String TYPE_AUTORUNS = "autorunActions";
+  public final static String TYPE_AUTORUN = "autorunAction";
+  public final static String TYPE_COMMON_DATA = "commonData";
+  public final static String TYPE_COMMON_TABLE = "commonTable";
+  public final static String TYPE_DASHBOARDS = "dashboards";
+  public final static String TYPE_DASHBOARD = "dashboard";
+  public final static String TYPE_DEVICES = "devices";
+  public final static String TYPE_DEVICE = "device";
+  public final static String TYPE_FILTERS = "eventFilters";
+  public final static String TYPE_FILTER = "eventFilter";
+  public final static String TYPE_FAVOURITES = "favourites";
+  public final static String TYPE_FAVOURITE = "favourite";
+  public final static String TYPE_GROUPS = "groups";
+  public final static String TYPE_GROUP = "group";
+  public final static String TYPE_JOBS = "jobs";
+  public final static String TYPE_JOB = "job";
+  public final static String TYPE_POLICIES = "policies";
+  public final static String TYPE_POLICY = "policy";
+  public final static String TYPE_QUERIES = "queries";
+  public final static String TYPE_QUERY = "query";
+  public final static String TYPE_REPORTS = "reports";
+  public final static String TYPE_REPORT = "report";
+  public final static String TYPE_ROLES = "roles";
+  public final static String TYPE_ROLE = "role";
+  public final static String TYPE_SCRIPTS = "scripts";
+  public final static String TYPE_SCRIPT = "script";
+  public final static String TYPE_SEGMENTS = "segments";
+  public final static String TYPE_SEGMENT = "segment";
+  public final static String TYPE_TRACKERS = "trackers";
+  public final static String TYPE_TRACKER = "tracker";
+  public final static String TYPE_USERS = "users";
+  public final static String TYPE_USER = "user";
+  public final static String TYPE_WIDGETS = "widgets";
+  public final static String TYPE_WIDGET = "widget";
+  public final static String TYPE_MODELS = "models";
+  public final static String TYPE_MODEL = "model";
+  public final static String TYPE_WORKFLOW = "workflow";
+  public final static String TYPE_GEOFENCE = "geofence";
+  public final static String TYPE_PROCESS_CONTROL = "processControl";
+  
+  public final static String TYPE_UI_COMPONENTS = "uiComponents";
+  public final static String TYPE_UI_COMPONENT = "uiComponent";
+}

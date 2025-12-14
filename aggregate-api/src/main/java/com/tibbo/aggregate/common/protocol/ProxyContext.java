@@ -422,7 +422,9 @@ public class ProxyContext<C extends Context> extends AbstractContext<C>
     
     int i;
     
-    for (i = 0; i < source.length(); i++)
+    // Кэшируем длину строки для оптимизации (хотя length() O(1), но улучшает читаемость)
+    int sourceLength = source.length();
+    for (i = 0; i < sourceLength; i++)
     {
       char c = source.charAt(i);
       if (Character.isDigit(c))

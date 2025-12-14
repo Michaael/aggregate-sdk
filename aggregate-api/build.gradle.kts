@@ -15,6 +15,14 @@ sourceSets {
             srcDir("src/test/java")
         }
     }
+    // Source set для бенчмарков JMH
+    create("jmh") {
+        java {
+            srcDir("src/jmh/java")
+        }
+        compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+        runtimeClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+    }
 }
 
 dependencies {
@@ -30,6 +38,10 @@ dependencies {
     api(Log4JLibs.log4j12Api)
     api(Log4JLibs.log4jSlf4jImpl)
     api(Log4JLibs.slf4jApi)
+
+    // JMH для бенчмарков производительности
+    testImplementation(JMHLibs.jmhCore)
+    testAnnotationProcessor(JMHLibs.jmhGeneratorAnnProcess)
 
     // Используем локальные файлы из libs для javacsv и jpf
     val libsDir = file("../libs")
@@ -62,4 +74,64 @@ tasks.withType<Jar> {
     }
     from("../widget-api/build/resources/main")
     exclude("**/*.jar")
+}
+
+// Конфигурация для JMH source set
+configurations {
+    create("jmh")
+}
+
+dependencies {
+    // JMH зависимости для source set
+    add("jmh", JMHLibs.jmhCore)
+    add("jmh", JMHLibs.jmhGeneratorAnnProcess)
+    add("jmh", sourceSets.main.get().output)
+    add("jmh", sourceSets.test.get().output)
+    add("jmhCompileOnly", JMHLibs.jmhGeneratorAnnProcess)
+}
+
+// Задача для компиляции бенчмарков
+tasks.register<JavaCompile>("compileJmh") {
+    group = "benchmark"
+    source = sourceSets["jmh"].java
+    classpath = sourceSets["jmh"].compileClasspath
+    destinationDirectory.set(file("$buildDir/classes/jmh"))
+    sourceCompatibility = JavaVersion.VERSION_1_8.toString()
+    targetCompatibility = JavaVersion.VERSION_1_8.toString()
+}
+
+// Задача для создания JAR с бенчмарками
+tasks.register<Jar>("jmhJar") {
+    group = "benchmark"
+    dependsOn("compileJmh", "testClasses")
+    archiveClassifier.set("jmh")
+    
+    from(sourceSets["jmh"].java.classesDirectory) {
+        include("**/*.class")
+    }
+    from(sourceSets.main.get().output)
+    from(sourceSets.test.get().output)
+    
+    manifest {
+        attributes("Main-Class" to "org.openjdk.jmh.Main")
+    }
+}
+
+// Задача для запуска бенчмарков
+tasks.register<JavaExec>("jmh") {
+    group = "benchmark"
+    description = "Run JMH benchmarks. Use --args to pass JMH options."
+    dependsOn("jmhJar")
+    
+    classpath = configurations.getByName("jmh") + files(tasks.named<Jar>("jmhJar").get().archiveFile.get().asFile)
+    mainClass.set("org.openjdk.jmh.Main")
+    
+    // Параметры по умолчанию для JMH
+    // Можно переопределить через командную строку:
+    // ./gradlew :aggregate-api:jmh --args="PathParsingBenchmark -rf json -rff results.json"
+    if (project.hasProperty("jmhArgs")) {
+        args = (project.property("jmhArgs") as String).split(" ")
+    } else {
+        args = listOf("-h") // Показать справку по умолчанию
+    }
 }

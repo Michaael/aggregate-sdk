@@ -4,6 +4,7 @@ plugins {
     id("com.diffplug.spotless") version "6.11.0" apply false
     // JaCoCo is a core Gradle plugin, version is determined by Gradle version
     // For Java 8 compatibility, we use the version that comes with Gradle 8.11
+    id("org.owasp.dependencycheck") version "8.4.0" apply false
 }
 
 tasks {
@@ -70,10 +71,17 @@ project(":context-demo-web-app") {
     }
 }
 
-// Apply Spotless code formatting and JaCoCo to all Java projects
+// Apply Spotless code formatting, JaCoCo, and OWASP Dependency Check to all Java projects
 subprojects {
     if (name != "buildSrc") {
         apply(plugin = "com.diffplug.spotless")
+        
+        // Apply OWASP Dependency Check for security auditing
+        // Note: Configuration is done via dependency-check-suppressions.xml file
+        // Full configuration can be done via command line or properties file
+        if (name.startsWith("demo-") || name == "aggregate-api") {
+            apply(plugin = "org.owasp.dependencycheck")
+        }
         
         configure<com.diffplug.gradle.spotless.SpotlessExtension> {
             java {
@@ -82,8 +90,8 @@ subprojects {
                 trimTrailingWhitespace()
                 endWithNewline()
                 // Используем версию, совместимую с Java 8
-                // Google Java Format 1.10.x - последняя версия, поддерживающая Java 8
-                googleJavaFormat("1.10.0").aosp().reflowLongStrings()
+                // Google Java Format 1.7 - последняя версия, поддерживающая Java 8
+                googleJavaFormat("1.7")
             }
             
             kotlin {

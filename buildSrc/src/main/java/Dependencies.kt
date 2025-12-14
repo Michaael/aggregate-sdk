@@ -75,7 +75,9 @@ object JjwtLibs {
 
 object JasperReportsLibs {
     object Versions {
-        const val jasperReportsVersion = "6.19.1"
+        // Обновлено до 6.20.6 для устранения уязвимостей безопасности (версия 1.3.7)
+        // Последняя версия, совместимая с Java 8
+        const val jasperReportsVersion = "6.20.6"
         const val bcelVersion = "5.2"
         const val bshVersion = "2.1b5"
         const val groovyAllVersion = "2.4.8"
@@ -141,7 +143,9 @@ object XStreamLibs {
     object Versions {
         const val xpp3MinVersion = "1.1.4c"
         const val xmlpullVersion = "1.1.3.1"
-        const val xstreamVersion = "1.4.20"
+        // Обновлено до 1.4.23 для устранения уязвимостей десериализации (версия 1.3.7)
+        // Последняя версия, совместимая с Java 8
+        const val xstreamVersion = "1.4.23"
         const val hamcrestAllVersion = "1.1"
     }
 
@@ -288,4 +292,15 @@ object TestContainers {
     const val forJUnit5 = "org.testcontainers:junit-jupiter:$version"
 
     fun gav(module: String) = "$group:$module:$version"
+}
+
+object JMHLibs {
+    object Versions {
+        // JMH 1.36 - последняя версия, поддерживающая Java 8
+        // JMH 1.37+ требует Java 11+
+        const val jmhVersion = "1.36"
+    }
+
+    const val jmhCore = "org.openjdk.jmh:jmh-core:${Versions.jmhVersion}"
+    const val jmhGeneratorAnnProcess = "org.openjdk.jmh:jmh-generator-annprocess:${Versions.jmhVersion}"
 }

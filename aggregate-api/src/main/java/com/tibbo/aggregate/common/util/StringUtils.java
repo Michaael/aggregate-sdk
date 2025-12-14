@@ -334,7 +334,9 @@ public class StringUtils
     // Оптимизация: используем StringBuilder вместо StringBuffer
     StringBuilder buf = new StringBuilder();
     
-    for (int i = 0; i < src.length(); i++)
+    // Кэшируем длину строки для оптимизации (хотя length() O(1), но улучшает читаемость)
+    int srcLength = src.length();
+    for (int i = 0; i < srcLength; i++)
     {
       char ch = src.charAt(i);
       if (Character.isDigit(ch))
@@ -458,7 +460,9 @@ public class StringUtils
     List<String> lines = wrapText(text, len);
     // Оптимизация: используем StringBuilder вместо StringBuffer
     StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < lines.size(); i++)
+    // Кэшируем размер коллекции для оптимизации (хотя size() O(1) для ArrayList, но улучшает читаемость)
+    int linesSize = lines.size();
+    for (int i = 0; i < linesSize; i++)
     {
       if (i > 0)
       {

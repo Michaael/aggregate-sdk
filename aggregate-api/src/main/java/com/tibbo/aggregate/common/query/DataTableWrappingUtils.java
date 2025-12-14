@@ -50,7 +50,9 @@ public class DataTableWrappingUtils
     }
     
     StringBuffer r = new StringBuffer(columnName);
-    for (int i = 0; i < r.length(); i++)
+    // Кэшируем длину строки для оптимизации (хотя length() O(1), но улучшает читаемость)
+    int rLength = r.length();
+    for (int i = 0; i < rLength; i++)
     {
       char c = r.charAt(i);
       if (c == QueryConstants.SEPARATOR.charAt(0))

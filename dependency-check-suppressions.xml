@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- 
+        Файл подавления ложных срабатываний OWASP Dependency-Check.
+        Используется для исключения известных ложных срабатываний или уязвимостей,
+        которые не применимы к нашему проекту.
+    -->
+    
+    <!-- Пример подавления (раскомментировать при необходимости):
+    <suppress>
+        <notes>
+            <![CDATA[
+            Ложное срабатывание для библиотеки X.
+            Уязвимость не применима к нашему использованию.
+            ]]>
+        </notes>
+        <gav regex="true">^com\.example:library-x:.*$</gav>
+        <cve>CVE-YYYY-XXXXX</cve>
+    </suppress>
+    -->
+    
+</suppressions>
+

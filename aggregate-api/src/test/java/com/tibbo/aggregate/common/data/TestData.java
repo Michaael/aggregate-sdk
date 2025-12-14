@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.*;
@@ -41,7 +42,6 @@ public class TestData
   }
   
   @Test
-  @Test
   public void testEmptyData() throws Exception
   {
     String text = "0/\u001A/\u001A/-1/0/";
@@ -51,7 +51,6 @@ public class TestData
     assertEquals("", outputText);
   }
   
-  @Test
   @Test
   public void testDataConstructors() throws Exception
   {
@@ -78,7 +77,6 @@ public class TestData
     assertEquals(testData.length, data3.getData().length);
   }
   
-  @Test
   @Test
   public void testDataSettersAndGetters() throws Exception
   {
@@ -120,7 +118,6 @@ public class TestData
   }
   
   @Test
-  @Test
   public void testDataClone() throws Exception
   {
     Data original = new Data();
@@ -147,7 +144,6 @@ public class TestData
     assertEquals(original.getId(), shallowCloned.getId());
   }
   
-  @Test
   @Test
   public void testDataEqualsAndHashCode() throws Exception
   {
@@ -184,7 +180,6 @@ public class TestData
   }
   
   @Test
-  @Test
   public void testDataAttachments() throws Exception
   {
     Data data = new Data();
@@ -199,7 +194,6 @@ public class TestData
     assertEquals(123, data.getAttachments().get("key2"));
   }
   
-  @Test
   @Test
   public void testDataToString() throws Exception
   {
@@ -216,7 +210,6 @@ public class TestData
   }
   
   @Test
-  @Test
   public void testDataReleaseData() throws Exception
   {
     Data data = new Data();
@@ -232,7 +225,6 @@ public class TestData
     assertNull(data.getPreview());
   }
   
-  @Test
   @Test
   public void testDataEncode() throws Exception
   {
@@ -252,7 +244,6 @@ public class TestData
   }
   
   @Test
-  @Test
   public void testDataJsonString() throws Exception
   {
     Data data = new Data();
@@ -268,7 +259,6 @@ public class TestData
   }
   
   @Test
-  @Test
   public void testDataFromJsonString() throws Exception
   {
     String json = "{\"id\":\"123\",\"name\":\"test\",\"data\":\"ZGF0YQ==\",\"shallowCopy\":\"false\"}";
@@ -281,12 +271,136 @@ public class TestData
   }
   
   @Test
-  @Test
   public void testDataEmptyString() throws Exception
   {
     Data data = new Data("");
     assertNull(data.getId());
     assertNull(data.getName());
     assertNull(data.getData());
+  }
+  
+  @Test
+  public void testDataToDetailedString() throws Exception
+  {
+    Data data = new Data();
+    data.setId(123L);
+    data.setName("test");
+    data.setData("data".getBytes(StandardCharsets.UTF_8));
+    
+    String detailed = data.toDetailedString();
+    assertNotNull(detailed);
+    assertTrue(detailed.length() > 0);
+    // Detailed string should contain more information than regular toString
+    assertTrue(detailed.contains("123") || detailed.contains("test"));
+  }
+  
+  @Test
+  public void testDataToCleanString() throws Exception
+  {
+    Data data = new Data();
+    data.setId(123L);
+    data.setName("test");
+    data.setData("data".getBytes(StandardCharsets.UTF_8));
+    
+    String clean = data.toCleanString();
+    assertNotNull(clean);
+    assertTrue(clean.length() > 0);
+  }
+  
+  @Test
+  public void testDataEstimateDataSize() throws Exception
+  {
+    Data data = new Data();
+    data.setData("test data".getBytes(StandardCharsets.UTF_8));
+    data.setPreview("preview".getBytes(StandardCharsets.UTF_8));
+    
+    int estimatedSize = data.estimateDataSize();
+    assertTrue(estimatedSize > 0);
+    // Estimated size should be at least the size of data + preview
+    assertTrue(estimatedSize >= data.getData().length + data.getPreview().length);
+  }
+  
+  @Test
+  public void testDataEncodeWithParameters() throws Exception
+  {
+    Data data = new Data();
+    data.setId(123L);
+    data.setName("test");
+    data.setData("data".getBytes(StandardCharsets.UTF_8));
+    
+    StringBuilder sb = new StringBuilder();
+    StringBuilder result = data.encode(sb, null, false, 0);
+    
+    assertNotNull(result);
+    assertTrue(result.length() > 0);
+    // Result should be the same StringBuilder instance
+    assertSame(sb, result);
+  }
+  
+  @Test
+  public void testDataHashCodeConsistency() throws Exception
+  {
+    Data data1 = new Data();
+    data1.setId(123L);
+    data1.setName("test");
+    data1.setData("data".getBytes(StandardCharsets.UTF_8));
+    
+    Data data2 = new Data();
+    data2.setId(123L);
+    data2.setName("test");
+    data2.setData("data".getBytes(StandardCharsets.UTF_8));
+    
+    // Hash codes should be equal for equal objects
+    assertEquals(data1.hashCode(), data2.hashCode());
+    
+    // Hash code should be consistent
+    int hashCode1 = data1.hashCode();
+    int hashCode2 = data1.hashCode();
+    assertEquals(hashCode1, hashCode2);
+  }
+  
+  @Test
+  public void testDataNullValues() throws Exception
+  {
+    Data data = new Data();
+    // All fields should be null initially
+    assertNull(data.getId());
+    assertNull(data.getName());
+    assertNull(data.getData());
+    assertNull(data.getPreview());
+    assertNull(data.getAttachments());
+    
+    // Setting null values should work
+    data.setId(null);
+    data.setName(null);
+    data.setData(null);
+    data.setPreview(null);
+    
+    assertNull(data.getId());
+    assertNull(data.getName());
+    assertNull(data.getData());
+    assertNull(data.getPreview());
+  }
+  
+  @Test
+  public void testDataBlobAndDataConsistency() throws Exception
+  {
+    Data data = new Data();
+    byte[] testData = "test data".getBytes(StandardCharsets.UTF_8);
+    
+    // Setting blob should also set data
+    data.setBlob(testData);
+    assertNotNull(data.getBlob());
+    assertNotNull(data.getData());
+    assertEquals(testData.length, data.getBlob().length);
+    assertEquals(testData.length, data.getData().length);
+    
+    // Setting data should also set blob
+    byte[] newData = "new data".getBytes(StandardCharsets.UTF_8);
+    data.setData(newData);
+    assertNotNull(data.getBlob());
+    assertNotNull(data.getData());
+    assertEquals(newData.length, data.getBlob().length);
+    assertEquals(newData.length, data.getData().length);
   }
 }

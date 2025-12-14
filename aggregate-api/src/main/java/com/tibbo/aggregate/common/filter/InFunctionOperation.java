@@ -50,7 +50,9 @@ public class InFunctionOperation extends ColumnFunctionOperation {
     private void cast(Object operand, List<Object> listOfValues) {
         if (operand instanceof Number) {
             // cast
-            for (int i = 0; i < listOfValues.size(); i++) {
+            // Кэшируем размер коллекции для оптимизации
+            int listSize = listOfValues.size();
+            for (int i = 0; i < listSize; i++) {
                 Object lv = listOfValues.get(i);
                 if (lv instanceof Number) {
                     listOfValues.set(i, new BigDecimal(lv.toString()));

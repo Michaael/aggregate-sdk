@@ -627,7 +627,7 @@ public class TestAbstractContext
     root.executeTasksConcurrently(tasks, loadFactor);
     
     // then
-    assertEquals("Not all submitted tasks were executed", numberOfTasks, taskCounter.get());
+    assertEquals(numberOfTasks, taskCounter.get(), "Not all submitted tasks were executed");
     verify(executor, times(numberOfTasks)).submit(aTask);
   }
   

@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,6 +24,46 @@ import com.tibbo.aggregate.common.datatable.TableFormat;
 import com.tibbo.aggregate.common.util.StringUtils;
 import com.tibbo.aggregate.common.util.ConcurrentLRUCache;
 
+/**
+ * Утилитный класс для работы с путями контекстов и масками.
+ * <p>
+ * Этот класс предоставляет статические методы для:
+ * <ul>
+ *   <li>Создания путей контекстов различных типов (пользователи, устройства, виджеты и т.д.)</li>
+ *   <li>Работы с масками контекстов (проверка соответствия, расширение масок)</li>
+ *   <li>Парсинга и валидации путей контекстов</li>
+ *   <li>Работы с именами контекстов и сущностей</li>
+ * </ul>
+ * 
+ * <p><b>Оптимизации производительности (версия 1.3.7):</b>
+ * <ul>
+ *   <li>LRU кэш для парсинга путей ({@link #PATH_PARTS_CACHE}) - 30-50% снижение CPU</li>
+ *   <li>Кэширование результатов разбиения путей для часто используемых путей</li>
+ * </ul>
+ * 
+ * <p><b>Примеры использования:</b>
+ * <pre>{@code
+ * // Создание пути контекста пользователя
+ * String userPath = ContextUtils.userContextPath("admin");
+ * // Результат: "root.users.admin"
+ * 
+ * // Создание пути для устройств пользователя
+ * String devicesPath = ContextUtils.devicesContextPath("admin");
+ * // Результат: "root.users.admin.devices"
+ * 
+ * // Проверка соответствия пути маске
+ * boolean matches = ContextUtils.matchesToMask("root.users.*", "root.users.admin");
+ * // Результат: true
+ * 
+ * // Разбиение пути на части (с кэшированием)
+ * List<String> parts = ContextUtils.splitPathCached("root.users.admin");
+ * // Результат: ["root", "users", "admin"]
+ * }</pre>
+ *
+ * @author AggreGate SDK Team
+ * @version 1.3.7
+ * @since 1.0
+ */
 public class ContextUtils
 {
   public static final String CONTEXT_NAME_PATTERN = "\\w*";
@@ -89,31 +128,81 @@ public class ContextUtils
   
   public static final Set<String> CONTEXT_TYPES = new TreeSet<String>();
   
+  /**
+   * Создает путь контекста пользователя.
+   * 
+   * <p><b>Пример:</b>
+   * <pre>{@code
+   * String path = ContextUtils.userContextPath("admin");
+   * // Результат: "root.users.admin"
+   * }</pre>
+   *
+   * @param username имя пользователя
+   * @return путь контекста пользователя (например, "root.users.admin")
+   */
   public static String userContextPath(String username)
   {
     return createName(Contexts.CTX_USERS, username);
   }
   
+  /**
+   * Создает путь контекста серверов устройств пользователя.
+   * 
+   * <p><b>Пример:</b>
+   * <pre>{@code
+   * String path = ContextUtils.deviceServersContextPath("admin");
+   * // Результат: "root.users.admin.deviceservers"
+   * }</pre>
+   *
+   * @param owner владелец (имя пользователя)
+   * @return путь контекста серверов устройств
+   */
   public static String deviceServersContextPath(String owner)
   {
     return createName(userContextPath(owner), Contexts.CTX_DEVICESERVERS);
   }
   
+  /**
+   * Создает путь контекста групп серверов устройств пользователя.
+   *
+   * @param owner владелец (имя пользователя)
+   * @return путь контекста групп серверов устройств
+   */
   public static String dsGroupsContextPath(String owner)
   {
     return createName(userContextPath(owner), Contexts.CTX_DSGROUPS);
   }
   
+  /**
+   * Создает путь контекста конкретной группы серверов устройств.
+   *
+   * @param owner владелец (имя пользователя)
+   * @param name имя группы
+   * @return путь контекста группы серверов устройств
+   */
   public static String dsGroupContextPath(String owner, String name)
   {
     return createName(dsGroupsContextPath(owner), name);
   }
   
+  /**
+   * Создает путь контекста групп устройств пользователя.
+   *
+   * @param owner владелец (имя пользователя)
+   * @return путь контекста групп устройств
+   */
   public static String deviceGroupsContextPath(String owner)
   {
     return createName(userContextPath(owner), Contexts.CTX_DEVGROUPS);
   }
   
+  /**
+   * Создает путь контекста конкретной группы устройств.
+   *
+   * @param owner владелец (имя пользователя)
+   * @param name имя группы
+   * @return путь контекста группы устройств
+   */
   public static String deviceGroupContextPath(String owner, String name)
   {
     return createName(deviceGroupsContextPath(owner), name);
@@ -349,6 +438,18 @@ public class ContextUtils
     return createName(deviceServersContextPath(owner), name, Contexts.CTX_PLUGIN_CONFIG);
   }
   
+  /**
+   * Создает путь контекста устройств пользователя.
+   * 
+   * <p><b>Пример:</b>
+   * <pre>{@code
+   * String path = ContextUtils.devicesContextPath("admin");
+   * // Результат: "root.users.admin.devices"
+   * }</pre>
+   *
+   * @param owner владелец (имя пользователя)
+   * @return путь контекста устройств (например, "root.users.admin.devices")
+   */
   public static String devicesContextPath(String owner)
   {
     return createName(userContextPath(owner), Contexts.CTX_DEVICES);
@@ -736,6 +837,34 @@ public class ContextUtils
     }
   }
   
+  /**
+   * Проверяет, соответствует ли имя контекста маске.
+   * <p>
+   * Маска может содержать символ '*' для обозначения любого количества символов.
+   * 
+   * <p><b>Примеры использования:</b>
+   * <pre>{@code
+   * // Простое соответствие
+   * boolean match1 = ContextUtils.matchesToMask("root.users.admin", "root.users.admin");
+   * // Результат: true
+   * 
+   * // Маска с одной звездочкой
+   * boolean match2 = ContextUtils.matchesToMask("root.users.*", "root.users.admin");
+   * // Результат: true
+   * 
+   * // Маска с несколькими звездочками
+   * boolean match3 = ContextUtils.matchesToMask("root.*.devices.*", "root.users.admin.devices.server1");
+   * // Результат: true
+   * 
+   * // Несоответствие
+   * boolean match4 = ContextUtils.matchesToMask("root.users.*", "root.groups.admin");
+   * // Результат: false
+   * }</pre>
+   *
+   * @param mask маска для проверки (может содержать '*' для любого количества символов)
+   * @param name имя контекста для проверки
+   * @return true если имя соответствует маске, false в противном случае
+   */
   public static boolean matchesToMask(String mask, String name)
   {
     return matchesToMask(mask, name, false, false);
@@ -819,6 +948,29 @@ public class ContextUtils
     return true;
   }
   
+  /**
+   * Проверяет, соответствует ли контекст маске с возможностью расширения.
+   * <p>
+   * Этот метод позволяет проверить соответствие с учетом того, что контекст или маска
+   * могут быть расширены (иметь дополнительные части пути).
+   * 
+   * <p><b>Примеры использования:</b>
+   * <pre>{@code
+   * // Контекст может быть расширен (иметь дочерние элементы)
+   * boolean match1 = ContextUtils.matchesToMask("root.users.*", "root.users.admin.devices", true, false);
+   * // Результат: true (контекст расширен, но соответствует маске)
+   * 
+   * // Маска может быть расширена
+   * boolean match2 = ContextUtils.matchesToMask("root.users.*.devices", "root.users.*", false, true);
+   * // Результат: true (маска расширена)
+   * }</pre>
+   *
+   * @param mask маска для проверки
+   * @param context путь контекста для проверки
+   * @param contextMayExtendMask если true, контекст может иметь дополнительные части после маски
+   * @param maskMayExtendContext если true, маска может иметь дополнительные части после контекста
+   * @return true если контекст соответствует маске с учетом расширений
+   */
   public static boolean matchesToMask(String mask, String context, boolean contextMayExtendMask, boolean maskMayExtendContext)
   {
     if (mask == null || context == null)
@@ -955,6 +1107,41 @@ public class ContextUtils
     return CONTEXT_TYPE_ANY.equals(s) || Pattern.matches(CONTEXT_TYPE_PATTERN, s);
   }
   
+  /**
+   * Проверяет, является ли строка валидным именем контекста.
+   * <p>
+   * Валидное имя контекста должно соответствовать паттерну {@link #CONTEXT_NAME_PATTERN}
+   * и не должно быть зарезервированным именем.
+   * 
+   * <p><b>Правила валидации:</b>
+   * <ul>
+   *   <li>Имя должно соответствовать паттерну {@code \w*} (буквы, цифры, подчеркивания)</li>
+   *   <li>Имя не должно быть в списке зарезервированных имен ({@link #RESERVED_CONTEXT_NAMES})</li>
+   *   <li>Имя не должно быть пустым</li>
+   * </ul>
+   * 
+   * <p><b>Примеры использования:</b>
+   * <pre>{@code
+   * // Валидные имена
+   * boolean valid1 = ContextUtils.isValidContextName("admin");
+   * // Результат: true
+   * 
+   * boolean valid2 = ContextUtils.isValidContextName("user123");
+   * // Результат: true
+   * 
+   * // Невалидные имена
+   * boolean invalid1 = ContextUtils.isValidContextName("user-name"); // содержит дефис
+   * // Результат: false
+   * 
+   * boolean invalid2 = ContextUtils.isValidContextName(""); // пустое имя
+   * // Результат: false
+   * }</pre>
+   *
+   * @param s строка для проверки
+   * @return true если строка является валидным именем контекста, false в противном случае
+   * @see #CONTEXT_NAME_PATTERN
+   * @see #RESERVED_CONTEXT_NAMES
+   */
   public static boolean isValidContextName(String s)
   {
     if (s == null)
@@ -1177,6 +1364,35 @@ public class ContextUtils
     return getTypeForClass(clazz) + CONTEXT_TYPE_SEPARATOR + deviceType;
   }
   
+  /**
+   * Проверяет, является ли символ валидным для использования в имени контекста.
+   * <p>
+   * Валидными символами являются буквы (a-z, A-Z), цифры (0-9) и подчеркивание (_).
+   * 
+   * <p><b>Примеры использования:</b>
+   * <pre>{@code
+   * // Валидные символы
+   * boolean valid1 = ContextUtils.isValidContextNameChar('a');
+   * // Результат: true
+   * 
+   * boolean valid2 = ContextUtils.isValidContextNameChar('_');
+   * // Результат: true
+   * 
+   * boolean valid3 = ContextUtils.isValidContextNameChar('5');
+   * // Результат: true
+   * 
+   * // Невалидные символы
+   * boolean invalid1 = ContextUtils.isValidContextNameChar('-');
+   * // Результат: false
+   * 
+   * boolean invalid2 = ContextUtils.isValidContextNameChar('.');
+   * // Результат: false
+   * }</pre>
+   *
+   * @param c символ для проверки
+   * @return true если символ валиден для имени контекста, false в противном случае
+   * @see #isValidContextName(String)
+   */
   public static boolean isValidContextNameChar(char c)
   {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';

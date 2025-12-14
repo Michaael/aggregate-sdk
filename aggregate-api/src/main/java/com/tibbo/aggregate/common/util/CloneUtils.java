@@ -1,9 +1,5 @@
 package com.tibbo.aggregate.common.util;
 
-/*
- * General purpose class containing common <code>Object</code> manipulation
- * methods.
- */
 import java.awt.*;
 import java.lang.reflect.*;
 import java.util.*;
@@ -12,6 +8,38 @@ import com.tibbo.aggregate.common.*;
 import com.tibbo.aggregate.common.datatable.*;
 import com.tibbo.aggregate.common.datatable.converter.*;
 
+/**
+ * Утилитный класс для клонирования объектов различных типов.
+ * <p>
+ * Этот класс предоставляет методы для глубокого и поверхностного клонирования объектов,
+ * включая поддержку коллекций, мапов, массивов и пользовательских типов.
+ * 
+ * <p><b>Поддерживаемые типы:</b>
+ * <ul>
+ *   <li>Примитивные типы и их обертки (String, Number, Boolean, Character)</li>
+ *   <li>Объекты, реализующие {@link PublicCloneable}</li>
+ *   <li>Коллекции (ArrayList, LinkedList, HashSet, TreeSet)</li>
+ *   <li>Мапы (HashMap, LinkedHashMap, Hashtable)</li>
+ *   <li>Массивы (Object[], примитивные массивы)</li>
+ *   <li>Date, Color и другие стандартные типы</li>
+ * </ul>
+ * 
+ * <p><b>Примеры использования:</b>
+ * <pre>{@code
+ * // Клонирование объекта
+ * Object clone = CloneUtils.genericClone(original);
+ * 
+ * // Глубокое клонирование
+ * Object deepClone = CloneUtils.deepClone(original);
+ * 
+ * // Клонирование коллекции
+ * List<String> clonedList = (List<String>) CloneUtils.genericClone(originalList);
+ * }</pre>
+ *
+ * @author AggreGate SDK Team
+ * @version 1.3.7
+ * @since 1.0
+ */
 public class CloneUtils
 {
   public static Object genericClone(Object object)

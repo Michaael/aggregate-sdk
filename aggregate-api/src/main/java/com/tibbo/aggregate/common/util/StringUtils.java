@@ -14,6 +14,46 @@ import com.tibbo.aggregate.common.datatable.*;
 
 import static com.google.common.collect.Lists.newArrayList;
 
+/**
+ * Утилитный класс для работы со строками и текстовыми данными.
+ * <p>
+ * Этот класс предоставляет статические методы для:
+ * <ul>
+ *   <li>Обрезки и форматирования строк</li>
+ *   <li>Преобразования данных (цвета, байты, hex-строки)</li>
+ *   <li>Парсинга и форматирования коллекций и мапов</li>
+ *   <li>Работы с кодировками и BOM</li>
+ *   <li>Переноса текста и форматирования</li>
+ * </ul>
+ * 
+ * <p><b>Оптимизации производительности (версия 1.3.7):</b>
+ * <ul>
+ *   <li>Использование StringBuilder вместо StringBuffer</li>
+ *   <li>Кэширование размеров коллекций в циклах</li>
+ * </ul>
+ * 
+ * <p><b>Примеры использования:</b>
+ * <pre>{@code
+ * // Обрезка строки
+ * String truncated = StringUtils.truncate("Very long string", 10, "...");
+ * // Результат: "Very long..."
+ * 
+ * // Преобразование цвета в строку
+ * String colorStr = StringUtils.colorToString(Color.RED);
+ * // Результат: "#FF0000FF"
+ * 
+ * // Печать коллекции
+ * String printed = StringUtils.print(Arrays.asList("a", "b", "c"), ", ");
+ * // Результат: "a, b, c"
+ * 
+ * // Удаление BOM из UTF-8
+ * byte[] clean = StringUtils.removeBOM(utf8Bytes);
+ * }</pre>
+ *
+ * @author AggreGate SDK Team
+ * @version 1.3.7
+ * @since 1.0
+ */
 public class StringUtils
 {
   public final static Charset UTF8_CHARSET = Charset.forName("UTF-8");
@@ -23,11 +63,45 @@ public class StringUtils
   public final static String DEFAULT_COLLECTION_PRINT_SEPARATOR = ", ";
   public final static String DEFAULT_MAP_KEY_VALUE_SEPARATOR = ": ";
   
+  /**
+   * Обрезает строку до указанной максимальной длины.
+   * 
+   * <p><b>Пример:</b>
+   * <pre>{@code
+   * String result = StringUtils.truncate("Very long string", 10);
+   * // Результат: "Very long "
+   * }</pre>
+   *
+   * @param str исходная строка
+   * @param maxLength максимальная длина строки
+   * @return обрезанная строка (без суффикса)
+   */
   public static String truncate(String str, int maxLength)
   {
     return truncate(str, maxLength, null);
   }
   
+  /**
+   * Обрезает строку до указанной максимальной длины с добавлением суффикса.
+   * <p>
+   * Если длина строки превышает maxLength, строка обрезается и добавляется суффикс.
+   * 
+   * <p><b>Примеры:</b>
+   * <pre>{@code
+   * // С суффиксом
+   * String result1 = StringUtils.truncate("Very long string", 10, "...");
+   * // Результат: "Very long..."
+   * 
+   * // Без суффикса
+   * String result2 = StringUtils.truncate("Short", 10, "...");
+   * // Результат: "Short" (не обрезается, суффикс не добавляется)
+   * }</pre>
+   *
+   * @param str исходная строка
+   * @param maxLength максимальная длина строки (без учета суффикса)
+   * @param suffix суффикс, добавляемый к обрезанной строке (может быть null)
+   * @return обрезанная строка с суффиксом (если длина превышает maxLength), или исходная строка
+   */
   public static String truncate(String str, int maxLength, String suffix)
   {
     String res = str.length() <= maxLength ? str : str.substring(0, maxLength);
@@ -38,6 +112,21 @@ public class StringUtils
     return res;
   }
   
+  /**
+   * Преобразует байт в строку в hex-формате (два символа, верхний регистр).
+   * 
+   * <p><b>Примеры:</b>
+   * <pre>{@code
+   * String hex1 = StringUtils.byteToHexString(255);
+   * // Результат: "FF"
+   * 
+   * String hex2 = StringUtils.byteToHexString(10);
+   * // Результат: "0A"
+   * }</pre>
+   *
+   * @param i значение байта (0-255)
+   * @return hex-строка из двух символов в верхнем регистре
+   */
   public static String byteToHexString(int i)
   {
     String str = Integer.toHexString(i & 0xFF).toUpperCase(Locale.ENGLISH);
@@ -48,6 +137,24 @@ public class StringUtils
     return str;
   }
   
+  /**
+   * Преобразует цвет в строковое представление в формате #RRGGBBAA.
+   * 
+   * <p><b>Примеры:</b>
+   * <pre>{@code
+   * String color1 = StringUtils.colorToString(Color.RED);
+   * // Результат: "#FF0000FF"
+   * 
+   * String color2 = StringUtils.colorToString(new Color(128, 64, 32, 255));
+   * // Результат: "#804020FF"
+   * 
+   * String color3 = StringUtils.colorToString(null);
+   * // Результат: null
+   * }</pre>
+   *
+   * @param color цвет для преобразования
+   * @return строковое представление цвета в формате #RRGGBBAA, или null если color == null
+   */
   public static String colorToString(Color color)
   {
     if (color == null)
@@ -319,6 +426,28 @@ public class StringUtils
     return print(Arrays.asList(array), separator);
   }
   
+  /**
+   * Удаляет BOM (Byte Order Mark) из начала UTF-8 массива байтов.
+   * <p>
+   * BOM в UTF-8 представлен последовательностью байтов: 0xEF 0xBB 0xBF.
+   * Этот метод проверяет наличие BOM и удаляет его, если он присутствует.
+   * 
+   * <p><b>Примеры:</b>
+   * <pre>{@code
+   * // Массив с BOM
+   * byte[] withBOM = new byte[]{(byte)0xEF, (byte)0xBB, (byte)0xBF, 0x48, 0x65, 0x6C, 0x6C, 0x6F};
+   * byte[] clean = StringUtils.removeBOM(withBOM);
+   * // Результат: массив без первых 3 байтов (BOM)
+   * 
+   * // Массив без BOM
+   * byte[] withoutBOM = new byte[]{0x48, 0x65, 0x6C, 0x6C, 0x6F};
+   * byte[] result = StringUtils.removeBOM(withoutBOM);
+   * // Результат: исходный массив без изменений
+   * }</pre>
+   *
+   * @param utf8ByteArray массив байтов UTF-8 (может содержать BOM)
+   * @return массив байтов без BOM, или исходный массив если BOM не найден
+   */
   public static byte[] removeBOM(byte[] utf8ByteArray)
   {
     if (utf8ByteArray != null && utf8ByteArray.length >= 3 && utf8ByteArray[0] == (byte) 0xEF && utf8ByteArray[1] == (byte) 0xBB && utf8ByteArray[2] == (byte) 0xBF)
@@ -329,6 +458,21 @@ public class StringUtils
     return utf8ByteArray;
   }
   
+  /**
+   * Извлекает из строки только цифры, удаляя все остальные символы.
+   * 
+   * <p><b>Примеры:</b>
+   * <pre>{@code
+   * String result1 = StringUtils.remoteNonDigits("abc123def456");
+   * // Результат: "123456"
+   * 
+   * String result2 = StringUtils.remoteNonDigits("Phone: +1-234-567-8900");
+   * // Результат: "12345678900"
+   * }</pre>
+   *
+   * @param src исходная строка
+   * @return строка, содержащая только цифры из исходной строки
+   */
   public static String remoteNonDigits(String src)
   {
     // Оптимизация: используем StringBuilder вместо StringBuffer
@@ -348,6 +492,22 @@ public class StringUtils
     return buf.toString();
   }
   
+  /**
+   * Удаляет суффикс из строки, если он присутствует.
+   * 
+   * <p><b>Примеры:</b>
+   * <pre>{@code
+   * String result1 = StringUtils.removeSuffix("filename.txt", ".txt");
+   * // Результат: "filename"
+   * 
+   * String result2 = StringUtils.removeSuffix("filename", ".txt");
+   * // Результат: null (суффикс не найден)
+   * }</pre>
+   *
+   * @param src исходная строка
+   * @param suffix суффикс для удаления
+   * @return строка без суффикса, или null если суффикс не найден
+   */
   public static String removeSuffix(String src, String suffix)
   {
     if (src.endsWith(suffix))
@@ -505,6 +665,29 @@ public class StringUtils
     return true;
   }
   
+  /**
+   * Проверяет, является ли строка пустой или null.
+   * <p>
+   * Строка считается пустой, если она равна null или имеет длину 0.
+   * 
+   * <p><b>Примеры:</b>
+   * <pre>{@code
+   * boolean empty1 = StringUtils.isEmpty(null);
+   * // Результат: true
+   * 
+   * boolean empty2 = StringUtils.isEmpty("");
+   * // Результат: true
+   * 
+   * boolean empty3 = StringUtils.isEmpty("   ");
+   * // Результат: false (строка содержит пробелы)
+   * 
+   * boolean empty4 = StringUtils.isEmpty("text");
+   * // Результат: false
+   * }</pre>
+   *
+   * @param text строка для проверки
+   * @return true если строка null или пустая, false в противном случае
+   */
   public static boolean isEmpty(String text)
   {
     return text == null || text.isEmpty();

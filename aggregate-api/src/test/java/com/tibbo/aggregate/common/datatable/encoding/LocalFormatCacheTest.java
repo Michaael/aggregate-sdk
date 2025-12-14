@@ -82,8 +82,8 @@ public class LocalFormatCacheTest
         Integer id = sut.obtainId(tableFormat);
 
         // then
-        assertNull("Format must not receive ID until it was added to cache", tableFormat.getId());
-        assertNull("Cache must not assign ID to a format until it was explicitly added", id);
+          assertNull(tableFormat.getId(), "Format must not receive ID until it was added to cache");
+          assertNull(id, "Cache must not assign ID to a format until it was explicitly added");
     }
 
     @Test
@@ -100,7 +100,7 @@ public class LocalFormatCacheTest
         sut.addIfNotExists(formatClone);
 
         // then
-        assertEquals("Adding an equal format must not fill the cache", 1, sut.getSize());
+          assertEquals(1, sut.getSize(), "Adding an equal format must not fill the cache");
         assertNull("Equal format must not receive the same ID as already cached one", formatClone.getId());
     }
 

@@ -1,7 +1,7 @@
 # AggreGate SDK
 
 [![Build Status](https://github.com/tibbo/aggregate-sdk/workflows/CI/badge.svg)](https://github.com/tibbo/aggregate-sdk/actions)
-[![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](LICENSE)
+[![License]](LICENSE)
 
 **AggreGate SDK** - это набор инструментов и библиотек для разработки приложений на платформе AggreGate. SDK предоставляет API для создания агентов, драйверов устройств, плагинов сервера и клиентских приложений.
 

@@ -1,6 +1,6 @@
 plugins {
     java
-    id("org.jetbrains.gradle.plugin.idea-ext") version "0.7"
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.3"
     id("com.diffplug.spotless") version "6.11.0" apply false
     // JaCoCo is a core Gradle plugin, version is determined by Gradle version
     // For Java 8 compatibility, we use the version that comes with Gradle 8.11

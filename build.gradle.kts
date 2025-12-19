@@ -52,8 +52,8 @@ allprojects {
 
     if (name.startsWith("demo-") || name == "aggregate-api") {
         dependencies {
-            testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
-            testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.1")
+            testImplementation("org.junit.jupiter:junit-jupiter:6.0.1")
+            testImplementation("org.junit.jupiter:junit-jupiter-params:6.0.1")
             testImplementation("org.junit.platform:junit-platform-suite:1.10.1")
             testImplementation("org.awaitility", "awaitility", "4.2.1")
             testImplementation(XStreamLibs.hamcrestAll)
